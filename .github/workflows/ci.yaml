@@ -83,19 +83,27 @@ jobs:
         argocd app terminate-op task-gitops-flow-dev\
           --insecure \
           --grpc-web || true
- 
-    - name: Refresh and sync Dev app
-      run: |
-        argocd app get task-gitops-flow-dev --refresh --insecure --grpc-web
-        argocd app sync task-gitops-flow-dev \
-          --insecure \
-          --grpc-web \
-          --timeout 120
- 
-    - name: Verify DEV app health
+
+    - name: Wait for Automated Sync and Health Verification
       run: |
         argocd app wait task-gitops-flow-dev \
+          --sync \
           --health \
-          --timeout 120 \
-          --insecure \
-          --grpc-web
+          --timeout 240 \
+          --plaintext
+ 
+    # - name: Refresh and sync Dev app
+    #   run: |
+    #     argocd app get task-gitops-flow-dev --refresh --insecure --grpc-web
+    #     argocd app sync task-gitops-flow-dev \
+    #       --insecure \
+    #       --grpc-web \
+    #       --timeout 120
+ 
+    # - name: Verify DEV app health
+    #   run: |
+    #     argocd app wait task-gitops-flow-dev \
+    #       --health \
+    #       --timeout 120 \
+    #       --insecure \
+    #       --grpc-web

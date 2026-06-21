@@ -64,7 +64,8 @@ jobs:
           --username admin \
           --password ${{ secrets.ARGOCD_PASSWORD }} \
           --insecure \
-          --grpc-web
+          --grpc-web \
+          --skip-test-tls
  
     - name: Register repo with ArgoCD
       run: |

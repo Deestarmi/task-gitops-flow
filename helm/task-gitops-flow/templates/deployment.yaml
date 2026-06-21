@@ -1,36 +1,37 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-    name: task-gitops-flow-dev
-    namespace: {{.Release.Namespace}}
+  name: task-gitops-flow
+  namespace: {{ .Release.Namespace }}
 spec:
-    replicas: {{.Values.replicaCount}}
-    selector:
-        matchLabels:
-            app: task-gitops-flow-dev
-    template:
-        metadata:
-            labels:
-                app: task-gitops-flow-dev
-    spec:
-        containers:
-        - name: task-gitops-flow-dev
-          image: "{{.Values.image.repository}}:{{.Values.image.tag}}"
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: task-gitops-flow
+  template:
+    metadata:
+      labels:
+        app: task-gitops-flow
+    spec:                          # ← MUST be nested 4 spaces, directly under "template:"
+      containers:
+        - name: task-gitops-flow
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           ports:
-          - containerPort: 5000
+            - containerPort: 5000
           env:
-          - name: APP_ENV
-            value: {{.Values.env.appEnv | quote}}
+            - name: APP_ENV
+              value: {{ .Values.env.appEnv | quote }}
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
-    name: task-gitops-flow-dev-svc
-    namespace: {{.Release.Namespace}}
+  name: task-gitops-flow-svc
+  namespace: {{ .Release.Namespace }}
 spec:
-    selector:
-        app: task-gitops-flow-dev
-    ports:
-    - port: {{.Values.service.port}}
+  selector:
+    app: task-gitops-flow
+  ports:
+    - port: {{ .Values.service.port }}
       targetPort: 5000
-    type: ClusterIP
+  type: ClusterIP

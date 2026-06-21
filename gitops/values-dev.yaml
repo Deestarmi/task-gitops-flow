@@ -1,4 +1,4 @@
 image:
-  tag: "v1.0-abc123"
+  tag: "latest"
 env:
   appEnv: "dev"

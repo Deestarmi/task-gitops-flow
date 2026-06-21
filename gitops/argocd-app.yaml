@@ -11,7 +11,7 @@ spec:
     path: helm/task-gitops-flow
     helm:
       valueFiles:
-      - gitops/values-dev.yaml
+      - ../../gitops/values-dev.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: dev

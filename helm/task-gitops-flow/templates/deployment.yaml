@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: task-gitops-flow
+  name: {{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: task-gitops-flow
+      app: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app: task-gitops-flow
+        app: {{ .Release.Name }}
     spec:                          # ← MUST be nested 4 spaces, directly under "template:"
       containers:
-        - name: task-gitops-flow
+        - name: {{ .Release.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           ports:
             - containerPort: 5000
@@ -26,11 +26,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: task-gitops-flow-svc
+  name: {{ .Release.Name }}-svc
   namespace: {{ .Release.Namespace }}
 spec:
   selector:
-    app: task-gitops-flow
+    app: {{ .Release.Name }}
   ports:
     - port: {{ .Values.service.port }}
       targetPort: 5000

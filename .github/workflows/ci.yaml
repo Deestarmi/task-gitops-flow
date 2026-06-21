@@ -64,7 +64,7 @@ jobs:
           --username admin \
           --password ${{ secrets.ARGOCD_PASSWORD }} \
           --plaintext
-          
+
     - name: Register repo with ArgoCD
       run: |
         argocd repo add https://github.com/${{ github.repository }} \
@@ -76,7 +76,7 @@ jobs:
       run: |
         mkdir -p ~/.kube
         echo "${{ secrets.KUBE_CONFIG }}" > ~/.kube/config
-        kubectl apply -f argocd/argocd-app.yaml
+        kubectl apply -f gitops/argocd-app.yaml
  
     - name: Terminate any stuck operation
       run: |

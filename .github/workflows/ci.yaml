@@ -63,10 +63,8 @@ jobs:
         argocd login ${{ secrets.ARGOCD_SERVER }} \
           --username admin \
           --password ${{ secrets.ARGOCD_PASSWORD }} \
-          --insecure \
-          --grpc-web \
-          --skip-test-tls
- 
+          --plaintext
+          
     - name: Register repo with ArgoCD
       run: |
         argocd repo add https://github.com/${{ github.repository }} \

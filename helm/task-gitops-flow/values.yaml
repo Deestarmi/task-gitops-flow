@@ -1,0 +1,8 @@
+image:
+  repository: "deestar08/task-gitops-flow"
+  tag: "latest"
+replicaCount: 1
+service:
+  port: 80
+env:
+  appEnv: "dev"

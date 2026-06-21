@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: task-gitops-flow-dev
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Deestarmi/task-gitops-flow.git
+    targetRevision: HEAD
+    path: helm/task-gitops-flow
+    helm:
+      valueFiles:
+      - gitops/values-dev.yaml
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: dev
+    synPolicy: 
+      automated:
+        prune: true
+        selfHeal: true
+      syncOptions:
+      - CreateNamespace=true

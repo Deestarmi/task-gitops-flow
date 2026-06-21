@@ -1,0 +1,6 @@
+.git
+.gitignore
+helm
+gitops
+README.md
+docker-compose.yaml

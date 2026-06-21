@@ -1,0 +1,101 @@
+name: CI and CD process of the taks flow project using github-action
+on:
+  push:
+    branches: ["main"]
+jobs:
+  build-scan-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: checkout code
+      uses: actions/checkout@v4
+    
+    - name: set up docker buildx
+      uses: docker/setup-buildx-actions@v3
+    
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{secrets.DOCKER_USERNAME}}
+        password: ${{secrets.DOCKER_PASSWORD}}
+    - name: Build image (dont push yet)
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: false
+        load: true
+        tags: ${{secrets.DOCKER_USERNAME}}/task-gitops-flow:latest
+    - name: Trivy scan
+      uses: aquasecurity/trivy-action@master
+      with:
+          image-ref: ${{ secrets.DOCKER_USERNAME }}/task-gitops-flow:latest
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+          ignore-unfixed: "true"
+    
+    - name:  Push to Docker Hub
+      run: docker push ${{secrets.DOCKER_USERNAME}}/task-gitops-flow:latest
+    
+    - name: Update Gitops Values
+      run: | 
+          sed -i "s|tag:.*|tag: \"latest\"|" gitops/values-dev.yaml
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add gitops/values-dev.yaml
+          git diff --staged --quiet || git commit -m "ci: update dev tag [skip ci]"
+          git push
+    
+    - name: Install ArgoCD CLI
+      run: |
+        ARGOCD_VERSION=$(curl -s https://api.github.com/repos/argoproj/argo-cd/releases/latest \
+          | grep '"tag_name"' | cut -d'"' -f4)
+        curl -sSL -o /usr/local/bin/argocd \
+          https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_VERSION}/argocd-linux-amd64
+        chmod +x /usr/local/bin/argocd
+        argocd version --client
+ 
+    - name: Login to ArgoCD
+      run: |
+        argocd login ${{ secrets.ARGOCD_SERVER }} \
+          --username admin \
+          --password ${{ secrets.ARGOCD_PASSWORD }} \
+          --insecure \
+          --grpc-web
+ 
+    - name: Register repo with ArgoCD
+      run: |
+        argocd repo add https://github.com/${{ github.repository }} \
+          --insecure \
+          --grpc-web \
+          --upsert
+ 
+    - name: Apply ArgoCD prod Application
+      run: |
+        mkdir -p ~/.kube
+        echo "${{ secrets.KUBE_CONFIG }}" > ~/.kube/config
+        kubectl apply -f argocd/argocd-app.yaml
+ 
+    - name: Terminate any stuck operation
+      run: |
+        argocd app terminate-op task-gitops-flow-dev\
+          --insecure \
+          --grpc-web || true
+ 
+    - name: Refresh and sync Dev app
+      run: |
+        argocd app get task-gitops-flow-dev --refresh --insecure --grpc-web
+        argocd app sync task-gitops-flow-dev \
+          --insecure \
+          --grpc-web \
+          --timeout 120
+ 
+    - name: Verify DEV app health
+      run: |
+        argocd app wait task-gitops-flow-dev \
+          --health \
+          --timeout 120 \
+          --insecure \
+          --grpc-web
